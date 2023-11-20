@@ -22,37 +22,24 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
     double laser_z = CWLaserData_get_laser_z(el);
     double w0 = CWLaserData_get_laser_waist_radius(el);
 
-    double laser_intensity = CWLaserData_get_laser_intensity(el);
+    double laser_intensity = CWLaserData_get_laser_intensity(el);   // W/m^2
     double laser_wavelength = CWLaserData_get_laser_wavelength(el); // Hz
     
     double ion_excited_lifetime = CWLaserData_get_ion_excited_lifetime(el); // sec
     double ion_excitation_energy = CWLaserData_get_ion_excitation_energy(el); // eV
-       
-    // constants for the Map_of_Excitation vs OmegaRabi and Detuning:
-    // int64_t N_K1_values = CWLaserData_get_N_K1_values(el);
-    // int64_t N_Delta_Gamma_ratio_values = CWLaserData_get_N_Delta_Gamma_ratio_values(el);
-    // double  K1_max = CWLaserData_get_K1_max(el);
-    // double  Delta_Gamma_ratio_max = CWLaserData_get_Delta_Gamma_ratio_max(el);
-    // double  Delta_Gamma_ratio_min = CWLaserData_get_Delta_Gamma_ratio_min(el);
-    // double  dK1 = K1_max/(N_K1_values-1.0);
-    // double  dDelta_Gamma_ratio = N_Delta_Gamma_ratio_values/(Delta_Gamma_ratio_max-1.0);
-    
-    
-    //printf("Delta_Gamma_ratio_min=%e \n",Delta_Gamma_ratio_min);
-    // printf("DeltaDetuningTau_max=%e m\n",DeltaDetuningTau_max);
 
+    double cooling_section_length = CWLaserData_get_cooling_section_length(el); // m
+    
     double p0c = LocalParticle_get_p0c(part0); // eV
     double m0  = LocalParticle_get_mass0(part0); // eV/c^2
-    //printf("m0=%e,p0c=%e,p0c/m0=%f\n",m0,p0c,p0c/m0);
     double hbar = 1.054571817e-34; // J*sec
-    
-    
+        
     double gamma0 = sqrt(1.0 + p0c*p0c/(m0*m0));
     double beta0  = sqrt(1.0 - 1.0/(gamma0*gamma0));
     double OmegaTransition = ion_excitation_energy*QELEM/hbar; // rad/sec
     // printf("OmegaTransition = %e\n", OmegaTransition);
-    double length = 25; //m;
-    double n_scattered = length/(beta0*gamma0*C_LIGHT*ion_excited_lifetime);
+    
+    double n_scattered = cooling_section_length/(beta0*gamma0*C_LIGHT*ion_excited_lifetime);
 
     double kick_energy = n_scattered*-2.0*ion_excitation_energy*2.0*gamma0; //eV
     double kick_momentum = kick_energy/C_LIGHT; //eV/c
@@ -104,36 +91,23 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
              ); // m
 
         double I = 4.0*gamma*gamma * laser_intensity;
-        //printf("I = %f\n", (I));
-        // double OmegaRabi = \
-        //     (hbar*C_LIGHT/(ion_excitation_energy*QELEM)) * \
-        //     sqrt(I*2*PI/(ion_excitation_energy*QELEM*ion_excited_lifetime)); // rad/sec
-        // printf("OmegaRabi = %e\n", OmegaRabi);
-
+        
         double OmegaRabi = C_LIGHT*sqrt(6*PI)*sqrt(I)/
         sqrt(hbar*ion_excited_lifetime*POW3(OmegaTransition));
-        //double OmegaRabiTau = OmegaRabi/(2.0*gamma); // in the ion rest frame
-        
-        //double OmegaRabiTau = OmegaRabi*laser_sigma_t/(2.0*gamma); // in the ion rest frame
-        
-    
+            
         // Detuning from the ion transition resonance in the ion rest frame:        
         double cos_theta = -(nx*vx + ny*vy + nz*vz)/(beta*C_LIGHT);
         double laser_omega_ion_frame = (2.0*PI*C_LIGHT/laser_wavelength)*(1.0+beta*cos_theta)*gamma;
 
         
         double DeltaDetuning = (OmegaTransition - laser_omega_ion_frame);
-        double DeltaDetuningTau = DeltaDetuning;///(2.0*gamma);
+        double DeltaDetuningTau = DeltaDetuning/(2.0*gamma);
 
-
-        //printf("laser_omega_ion_frame = %e\n", laser_omega_ion_frame);
-        // printf("OmegaTransition = %e\n", OmegaTransition);
-        //printf("DeltaDetuning = %e\n", DeltaDetuning);
         double gamma_decay=1/ion_excited_lifetime;
         double k1=OmegaRabi*OmegaRabi/(gamma_decay*gamma_decay);
+        double ratio_detuning_gamma = DeltaDetuning/gamma_decay;
+
         //printf("k1=%f\n\n",k1);
-        //printf("OmegaRabi=%f\n\n",OmegaRabi);
-        double ratio_detuning_gamma = DeltaDetuningTau/gamma_decay;
         //printf("ratio_detuning_gamma=%f\n\n",ratio_detuning_gamma);
         
         //printf("state: %lf\n", state);
@@ -150,7 +124,9 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
                         LocalParticle_set_state(part, 2); // Excited particle
                         // photon recoil (from emitted photon!):
                         double rnd = (float)rand()/(float)(RAND_MAX);
-                        LocalParticle_add_to_energy(part,1e0*n_scattered*-2.0*ion_excitation_energy*rnd*2.0*gamma, 0); // eV
+                        
+                        //LocalParticle_add_to_energy(part,-2.0*ion_excitation_energy*rnd*2.0*gamma, 0); // eV
+                        LocalParticle_add_to_energy(part,n_scattered*-2.0*ion_excitation_energy*rnd*2.0*gamma, 0); // eV
                         }	
                     else
                         {

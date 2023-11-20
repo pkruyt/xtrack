@@ -2529,13 +2529,8 @@ class CWLaser(BeamElement):
                'ion_excitation_g1':     xo.Float64,
                'ion_excitation_g2':     xo.Float64,
                'ion_excited_lifetime':  xo.Float64,
-               'Map_of_Excitation':     xo.Float64[int(300*10000)],
-               'N_K1_values':           xo.Int64,
-               'N_Delta_Gamma_ratio_values': xo.Int64,
-               'K1_max':                xo.Float64,
-               'Delta_Gamma_ratio_max': xo.Float64,
-               'Delta_Gamma_ratio_min': xo.Float64
-              }
+               'cooling_section_length':  xo.Float64,
+               }
     
     
     _extra_c_sources = [
@@ -2556,32 +2551,24 @@ class CWLaser(BeamElement):
                         ion_excitation_g1 = 2,
                         ion_excitation_g2 = 2,
                         ion_excited_lifetime = 0,
+                        cooling_section_length=0,
                  **kwargs):
         super().__init__(**kwargs)
-        self.laser_direction_nx    = laser_direction_nx
-        self.laser_direction_ny    = laser_direction_ny
-        self.laser_direction_nz    = laser_direction_nz
-        self.laser_x               = laser_x
-        self.laser_y               = laser_y
-        self.laser_z               = laser_z
-        self.laser_waist_radius    = laser_waist_radius
-        self.laser_intensity       = laser_intensity
-        self.laser_wavelength      = laser_wavelength
-        self.ion_excitation_energy = ion_excitation_energy
-        self.ion_excitation_g1     = ion_excitation_g1
-        self.ion_excitation_g2     = ion_excitation_g2
-        self.ion_excited_lifetime  = ion_excited_lifetime
+        self.laser_direction_nx     = laser_direction_nx
+        self.laser_direction_ny     = laser_direction_ny
+        self.laser_direction_nz     = laser_direction_nz
+        self.laser_x                = laser_x
+        self.laser_y                = laser_y
+        self.laser_z                = laser_z
+        self.laser_waist_radius     = laser_waist_radius
+        self.laser_intensity        = laser_intensity
+        self.laser_wavelength       = laser_wavelength
+        self.ion_excitation_energy  = ion_excitation_energy
+        self.ion_excitation_g1      = ion_excitation_g1
+        self.ion_excitation_g2      = ion_excitation_g2
+        self.ion_excited_lifetime   = ion_excited_lifetime
+        self.cooling_section_length = cooling_section_length
         
-        # Map of Excitation:
-        fname = _pkg_root.joinpath('beam_elements/elements_src/IonLaserIP_data/map_of_excitation_analytical.json')
-        with open(fname, 'r') as f:
-            map_data = json.load(f)
-            self.Excitation = np.array(map_data['Excitation probability'])
-            self.N_K1_values, self.N_Delta_Gamma_ratio_values = np.shape(self.Excitation)
-            self.Delta_Gamma_ratio_max = max(map_data['Delta_Gamma_ratio_range'])
-            self.Delta_Gamma_ratio_min = min(map_data['Delta_Gamma_ratio_range'])
-            self.K1_max = max(map_data['K1_range'])
-            self.Map_of_Excitation = self.Excitation.flatten()
 
 class CWSPS(BeamElement):
     '''Beam element modeling partially stripped ion excitation and emission of photons. Parameters:

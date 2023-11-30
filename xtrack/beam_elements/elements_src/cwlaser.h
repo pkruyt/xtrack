@@ -39,11 +39,11 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
     double OmegaTransition = ion_excitation_energy*QELEM/hbar; // rad/sec
     // printf("OmegaTransition = %e\n", OmegaTransition);
     
-    double n_scattered = cooling_section_length/(beta0*gamma0*C_LIGHT*ion_excited_lifetime);
+    double number_of_excitations = cooling_section_length/(beta0*gamma0*C_LIGHT*ion_excited_lifetime);
 
-    double kick_energy = n_scattered*-2.0*ion_excitation_energy*2.0*gamma0; //eV
-    double kick_momentum = kick_energy/C_LIGHT; //eV/c
-    double kick_delta = kick_momentum/p0c; //eV/c
+    // double kick_energy = number_of_excitations*-2.0*ion_excitation_energy*2.0*gamma0; //eV
+    // double kick_momentum = kick_energy/C_LIGHT; //eV/c
+    // double kick_delta = kick_momentum/p0c; //eV/c
     //printf("n_scattered = %e\n", n_scattered);
     //printf("kick_strength = %e\n", 1e10*kick_strength/(C_LIGHT*p0c));
     //printf("kick_delta = %e\n", kick_delta);
@@ -94,7 +94,7 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
         
         double OmegaRabi = C_LIGHT*sqrt(6*PI)*sqrt(I)/
         sqrt(hbar*ion_excited_lifetime*POW3(OmegaTransition));
-            
+                    
         // Detuning from the ion transition resonance in the ion rest frame:        
         double cos_theta = -(nx*vx + ny*vy + nz*vz)/(beta*C_LIGHT);
         double laser_omega_ion_frame = (2.0*PI*C_LIGHT/laser_wavelength)*(1.0+beta*cos_theta)*gamma;
@@ -106,7 +106,6 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
         double gamma_decay=1/ion_excited_lifetime;
         double k1=OmegaRabi*OmegaRabi/(gamma_decay*gamma_decay);
         double ratio_detuning_gamma = DeltaDetuning/gamma_decay;
-
         //printf("k1=%f\n\n",k1);
         //printf("ratio_detuning_gamma=%f\n\n",ratio_detuning_gamma);
         
@@ -126,7 +125,7 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
                         double rnd = (float)rand()/(float)(RAND_MAX);
                         
                         //LocalParticle_add_to_energy(part,-2.0*ion_excitation_energy*rnd*2.0*gamma, 0); // eV
-                        LocalParticle_add_to_energy(part,n_scattered*-2.0*ion_excitation_energy*rnd*2.0*gamma, 0); // eV
+                        LocalParticle_add_to_energy(part,number_of_excitations*-2.0*ion_excitation_energy*rnd*2.0*gamma, 0); // eV
                         }	
                     else
                         {

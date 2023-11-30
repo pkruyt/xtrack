@@ -2,7 +2,7 @@
 # This file is part of the Xtrack Package.  #
 # Copyright (c) CERN, 2021.                 #
 # ######################################### #
-
+from math import ceil
 from time import perf_counter
 from typing import Literal, Union
 from contextlib import contextmanager
@@ -25,6 +25,7 @@ from .general import _pkg_root
 from .internal_record import new_io_buffer
 from .line import Line, _is_thick, freeze_longitudinal as _freeze_longitudinal
 from .pipeline import PipelineStatus
+from .progress_indicator import progress
 from .tracker_data import TrackerData
 from .prebuild_kernels import get_suitable_kernel, XT_PREBUILT_KERNELS_LOCATION
 
@@ -281,12 +282,44 @@ class Tracker:
                 "This tracker is not anymore valid, most probably because the corresponding line has been unfrozen. "
                 "Please rebuild the tracker, for example using `line.build_tracker(...)`.")
 
-    def _track(self, *args, **kwargs):
+    def _track(self, particles, *args, with_progress: Union[bool, int] = False, **kwargs):
         assert self.iscollective in (True, False)
         if self.iscollective or self.line.enable_time_dependent_vars:
-            return self._track_with_collective(*args, **kwargs)
+            tracking_func = self._track_with_collective
         else:
-            return self._track_no_collective(*args, **kwargs)
+            tracking_func = self._track_no_collective
+
+        if with_progress:
+            if self.enable_pipeline_hold:
+                raise ValueError("Progress indicator is not supported with pipeline hold")
+
+            try:
+                num_turns = kwargs['num_turns']
+            except KeyError:
+                raise ValueError('Tracking with progress indicator is only '
+                                 'possible over more than one turn.')
+
+            if with_progress is True:
+                with_progress = scaling = 100
+            else:
+                with_progress = int(with_progress)
+                scaling = with_progress if with_progress > 1 else None
+
+            for ii in progress(
+                    range(0, num_turns, with_progress),
+                    desc='Tracking',
+                    unit_scale=scaling,
+            ):
+                one_turn_kwargs = kwargs.copy()
+                if ii + with_progress > num_turns:  # last group of turns
+                    one_turn_kwargs['num_turns'] = num_turns % with_progress
+                else:
+                    one_turn_kwargs['num_turns'] = scaling
+
+                tracking_func(particles, *args, **one_turn_kwargs)
+                # particles.reorganize() # could be done in the future to optimize GPU usage
+        else:
+            return tracking_func(particles, *args, **kwargs)
 
     @property
     def particle_ref(self) -> xp.Particles:
@@ -329,8 +362,17 @@ class Tracker:
             module_name=None,
             containing_dir='.',
     ):
-        if (self.use_prebuilt_kernels and compile != 'force'
-                and isinstance(self._context, xo.ContextCpu)):
+        if compile == 'force':
+            use_prebuilt_kernels = False
+        elif not isinstance(self._context, xo.ContextCpu):
+            use_prebuilt_kernels = False
+        elif (self._context.omp_num_threads == 'auto'  # CPU context, but OpenMP
+              or self._context.omp_num_threads > 1):
+            use_prebuilt_kernels = False
+        else:
+            use_prebuilt_kernels = self.use_prebuilt_kernels
+
+        if use_prebuilt_kernels:
             kernel_info = get_suitable_kernel(
                 self.config, self.line_element_classes
             )
@@ -697,7 +739,7 @@ class Tracker:
         ret = None
         skip = False
         stop_tracking = False
-        
+
         if tt == 0 and ipp < self._element_part[ele_start]:
             # Do not track before ele_start in the first turn
             skip = True
@@ -820,6 +862,7 @@ class Tracker:
                 if not(tt_resume is not None and tt == tt_resume):
                     monitor.track(particles)
 
+            # Time dependent vars and energy ramping
             if self.line.enable_time_dependent_vars:
                 # Find first active particle
                 state = particles.state
@@ -830,11 +873,13 @@ class Tracker:
                     # No active particles
                     break
 
-                # Needs to be generalized for acceleration
-                beta0 = particles._xobject.beta0[ii_first_active]
                 at_turn = particles._xobject.at_turn[ii_first_active]
-                t_turn = (at_turn * self._tracker_data_base.line_length
-                          / (beta0 * clight)) + self.line.t0_time_dependent_vars
+                if self.line.energy_program is not None:
+                    t_turn = self.line.energy_program.get_t_s_at_turn(at_turn)
+                else:
+                    beta0 = particles._xobject.beta0[ii_first_active]
+                    t_turn = (at_turn * self._tracker_data_base.line_length
+                            / (beta0 * clight))
 
                 if (self.line._t_last_update_time_dependent_vars is None
                     or self.line.dt_update_time_dependent_vars is None
@@ -842,6 +887,10 @@ class Tracker:
                                 + self.line.dt_update_time_dependent_vars):
                     self.line._t_last_update_time_dependent_vars = t_turn
                     self.vars['t_turn_s'] = t_turn
+
+                    if self.line.energy_program is not None:
+                        p0c = self.line.particle_ref._xobject.p0c[0]
+                        particles.update_p0c_and_energy_deviations(p0c)
 
             moveback_to_buffer = None
             moveback_to_offset = None
@@ -867,7 +916,7 @@ class Tracker:
                                             particles, pp,
                                             moveback_to_buffer, moveback_to_offset,
                                             _context_needs_clean_active_lost_state)
-                
+
                 if monitor is not None and monitor.ebe_mode == 1:
                     monitor_part = monitor
                 else:

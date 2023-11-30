@@ -11,23 +11,6 @@ line.build_tracker()
 line_thick = line.copy()
 line_thick.build_tracker()
 
-# # Refresh
-# print('\nRefresh...')
-# t1 = time.time()
-# mgr = line._xdeps_manager
-# mgr.rdeps.clear()
-# mgr.rtasks.clear()
-# mgr.deptasks.clear()
-# mgr.tartasks.clear()
-
-# for ii, tt in enumerate(mgr.tasks.values()):
-#     print(f'...{ii}/{len(mgr.tasks)}    ', end='\r', flush=True)
-#     mgr.register(tt)
-# t2 = time.time()
-# print('...done')
-# print('Time refresh: ', t2-t1)
-
-
 slicing_strategies = [
     Strategy(slicing=Teapot(1)),  # Default catch-all as in MAD-X
     Strategy(slicing=Teapot(4), element_type=xt.Bend),
@@ -113,6 +96,8 @@ opt_thin = line.match(
         xt.Target('dqy', 12.0, tol=0.05)])
 t2 = time.time()
 print('\nTime match thin: ', t2-t1)
+
+line.to_json('lhc_thin.json')
 
 tw = line.twiss()
 tw_thick = line_thick.twiss()

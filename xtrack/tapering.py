@@ -24,7 +24,7 @@ def compensate_radiation_energy_loss(line, delta0=0, rtol_eneloss=1e-12,
 
     line.config.XTRACK_MULTIPOLE_NO_SYNRAD = True
     with xt.freeze_longitudinal(line):
-        particle_on_co = line.find_closed_orbit(delta0=delta0)
+        particle_on_co = line.find_closed_orbit()
     line.config.XTRACK_MULTIPOLE_NO_SYNRAD = False
 
     beta0 = float(particle_on_co._xobject.beta0[0])
@@ -35,7 +35,7 @@ def compensate_radiation_energy_loss(line, delta0=0, rtol_eneloss=1e-12,
     line.track(p_test, turn_by_turn_monitor='ONE_TURN_EBE')
     mon = line.record_last_track
     eloss = -(mon.ptau[0, -1] - mon.ptau[0, 0]) * p_test.p0c[0]
-    if abs(eloss) < p_test.energy0[0] * rtol_eneloss:
+    if p_test.state[0] > 0 and abs(eloss) < p_test.energy0[0] * rtol_eneloss:
         if verbose: _print("  - No compensation needed")
         return
 
@@ -99,6 +99,7 @@ def compensate_radiation_energy_loss(line, delta0=0, rtol_eneloss=1e-12,
     mask_active_cav = np.abs(v0) > 0
     v_ratio = v0 * 0
     v_ratio[mask_active_cav] = v_synchronous[mask_active_cav] / v0[mask_active_cav]
+    assert np.all(np.abs(v_ratio[mask_active_cav]) < 1)
     inst_phase = np.arcsin(v_ratio)
 
     total_lag = 360.*(inst_phase / (2 * np.pi) - f0 * zeta_at_cav / beta0 / clight)

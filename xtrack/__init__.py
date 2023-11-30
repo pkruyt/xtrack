@@ -9,10 +9,11 @@ from .base_element import BeamElement
 from .beam_elements import *
 from .random import *
 from .tracker_data import TrackerData
-from .line import Line, Node, freeze_longitudinal, _temp_knobs
+from .line import Line, Node, freeze_longitudinal, _temp_knobs, EnergyProgram
 from .tracker import Tracker
 from .match import (Vary, Target, TargetList, VaryList, TargetInequality, Action,
-                    TargetRelPhaseAdvance, TargetSet, START, END)
+                    TargetRelPhaseAdvance, TargetSet, START, END,
+                    GreaterThan, LessThan)
 from .targets import (TargetLuminosity, TargetSeparationOrthogonalToCrossing,
                       TargetSeparation)
 from .twiss import TwissInit, TwissTable
@@ -37,6 +38,7 @@ from .line import _is_drift, _behaves_like_drift, _is_aperture, _is_thick, _allo
 from .line import _lines_equal, _apertures_equal
 from .loss_location_refinement import _skip_in_loss_location_refinement
 
+from xdeps import Table
 
 from ._version import __version__
 

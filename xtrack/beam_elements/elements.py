@@ -2602,6 +2602,12 @@ class IonLaserIP(BeamElement):
                 - ion_excited_lifetime [s]: Lifetime of the exited state. Default is ``3.9e-17``.
     '''
 
+    # Map of Excitation:
+    fname = _pkg_root.joinpath('beam_elements/elements_src/IonLaserIP_data/map_of_excitation.json')
+    with open(fname, 'r') as f:
+        map_data = json.load(f)
+        excitation_map = np.array(map_data['Excitation probability'])
+
     _xofields={
                'laser_direction_nx':    xo.Float64,
                'laser_direction_ny':    xo.Float64,
@@ -2618,7 +2624,7 @@ class IonLaserIP(BeamElement):
                'ion_excitation_g1':     xo.Float64,
                'ion_excitation_g2':     xo.Float64,
                'ion_excited_lifetime':  xo.Float64,
-               'Map_of_Excitation':         xo.Float64[int(80*30)],
+               'Map_of_Excitation':         xo.Float64[int(excitation_map.size)],
                'N_OmegaRabiTau_values':     xo.Int64,
                'N_DeltaDetuningTau_values': xo.Int64,
                'OmegaRabiTau_max':          xo.Float64,

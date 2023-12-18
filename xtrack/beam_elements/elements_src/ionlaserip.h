@@ -180,9 +180,9 @@ void IonLaserIP_track_local_particle(IonLaserIPData el, LocalParticle* part0){
                 {
                 LocalParticle_set_state(part, 1); // Still particle
                 }
-                
-                }
-                }
+
+            }
+            }
             
 	//end_per_particle_block
     

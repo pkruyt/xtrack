@@ -2548,7 +2548,7 @@ class CWLaser(BeamElement):
     
     _extra_c_sources = [
             _pkg_root.joinpath('headers/constants.h'),
-            _pkg_root.joinpath('beam_elements/elements_src/cwlaser.h')]
+            _pkg_root.joinpath('beam_elements/elements_src/cw_laser.h')]
 
     
     def __init__(self,  laser_direction_nx =  0,
@@ -2583,7 +2583,7 @@ class CWLaser(BeamElement):
         self.cooling_section_length = cooling_section_length
 
 
-class IonLaserIP(BeamElement):
+class PulsedLaser(BeamElement):
     '''Beam element modeling partially stripped ion excitation and emission of photons. Parameters:
                   Gaussian laser pulse is assumed (en.wikipedia.org/wiki/Gaussian_beam)
                 - laser_direction_nx,..._ny,..._nz: Laser direction vector n. Default is ``0,0,-1``.
@@ -2603,7 +2603,7 @@ class IonLaserIP(BeamElement):
     '''
 
     # Map of Excitation:
-    fname = _pkg_root.joinpath('beam_elements/elements_src/IonLaserIP_data/map_of_excitation.json')
+    fname = _pkg_root.joinpath('beam_elements/elements_src/PulsedLaser_data/map_of_excitation.json')
     with open(fname, 'r') as f:
         map_data = json.load(f)
         excitation_map = np.array(map_data['Excitation probability'])
@@ -2634,7 +2634,7 @@ class IonLaserIP(BeamElement):
     
     _extra_c_sources = [
             _pkg_root.joinpath('headers/constants.h'),
-            _pkg_root.joinpath('beam_elements/elements_src/ionlaserip.h')]
+            _pkg_root.joinpath('beam_elements/elements_src/pulsed_laser.h')]
 
     
     def __init__(self,  laser_direction_nx =  0,
@@ -2672,7 +2672,7 @@ class IonLaserIP(BeamElement):
         self.ion_excited_lifetime  = ion_excited_lifetime
         
         # Map of Excitation:
-        fname = _pkg_root.joinpath('beam_elements/elements_src/IonLaserIP_data/map_of_excitation.json')
+        fname = _pkg_root.joinpath('beam_elements/elements_src/PulsedLaser_data/map_of_excitation.json')
         with open(fname, 'r') as f:
             map_data = json.load(f)
             self.Excitation = np.array(map_data['Excitation probability'])

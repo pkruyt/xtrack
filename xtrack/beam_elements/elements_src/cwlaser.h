@@ -37,17 +37,9 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
     double gamma0 = sqrt(1.0 + p0c*p0c/(m0*m0));
     double beta0  = sqrt(1.0 - 1.0/(gamma0*gamma0));
     double OmegaTransition = ion_excitation_energy*QELEM/hbar; // rad/sec
-    // printf("OmegaTransition = %e\n", OmegaTransition);
-    
+
+    //number of excitations that will occur over the entire cooling section:        
     double number_of_excitations = cooling_section_length/(beta0*gamma0*C_LIGHT*ion_excited_lifetime);
-
-    // double kick_energy = number_of_excitations*-2.0*ion_excitation_energy*2.0*gamma0; //eV
-    // double kick_momentum = kick_energy/C_LIGHT; //eV/c
-    // double kick_delta = kick_momentum/p0c; //eV/c
-    //printf("n_scattered = %e\n", n_scattered);
-    //printf("kick_strength = %e\n", 1e10*kick_strength/(C_LIGHT*p0c));
-    //printf("kick_delta = %e\n", kick_delta);
-
 
     //start_per_particle_block (part0->part)
     
@@ -104,19 +96,18 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
         double DeltaDetuningTau = DeltaDetuning/(2.0*gamma);
 
         double gamma_decay=1/ion_excited_lifetime;
+        //compute saturation parameter and normalized detuning:
         double k1=OmegaRabi*OmegaRabi/(gamma_decay*gamma_decay);
         double ratio_detuning_gamma = DeltaDetuning/gamma_decay;
-        //printf("k1=%f\n\n",k1);
-        //printf("ratio_detuning_gamma=%f\n\n",ratio_detuning_gamma);
-        
-        //printf("state: %lf\n", state);
+
+        //1. only apply laser cooling to particles that are within the laser radius
+        //2. only apply laser cooling to particles that have not been lost. In Xsuite, this means positive state
         if (r2 < POW2(w0))
             {
             if (state > 0)
             {
                     double excitation_probability = 0.5*k1 / (4*ratio_detuning_gamma * ratio_detuning_gamma + k1 + 1);
-                    //printf("excitation_probability=%f\n\n",excitation_probability);
-                                    
+                                                        
                     double rnd = (float)rand()/(float)(RAND_MAX);
                     if ( rnd < excitation_probability )
                         {
@@ -124,8 +115,10 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
                         // photon recoil (from emitted photon!):
                         double rnd = (float)rand()/(float)(RAND_MAX);
                         
-                        //LocalParticle_add_to_energy(part,-2.0*ion_excitation_energy*rnd*2.0*gamma, 0); // eV
-                        LocalParticle_add_to_energy(part,number_of_excitations*-2.0*ion_excitation_energy*rnd*2.0*gamma, 0); // eV
+                        // If particle is excited, reduce its energy by, on average, the excitation energy with Lorentz boost
+                        // 2.0*rnd ensures that the average energy lost is the excitation energy
+                        // 2.0*gamma is the Lorentz boost
+                        LocalParticle_add_to_energy(part,-number_of_excitations*ion_excitation_energy*2.0*rnd*2.0*gamma, 0); // eV
                         }	
                     else
                         {

@@ -75,9 +75,9 @@ void ChirpedLaser_track_local_particle(ChirpedLaserData el, LocalParticle* part0
         // Collision of ion with the laser pulse:
         // The position of the laser beam center is rl=rl0+ct*n. We can find the moment
         // when a particle with a position r=r0+vt collides with the laser as the moment
-        // when r−rl is perpendicular to n. Then (r−rl,n)=0, which yields the equation
-        // (r0,n)+(v,n)t−(rl0,n)−ct(n,n)=0. Hence
-        // tcol=(r0−rl0,n)/[c−(v,n)]
+        // when r-rl is perpendicular to n. Then (r-rl,n)=0, which yields the equation
+        // (r0,n)+(v,n)t-(rl0,n)-ct(n,n)=0. Hence
+        // tcol=(r0-rl0,n)/[c-(v,n)]
 
         double tcol = ( (x-laser_x)*nx + (y-laser_y)*ny + (z-laser_z)*nz ) / (C_LIGHT - (vx*nx+vy*ny+vz*nz)); // sec
 

@@ -108,12 +108,12 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
             {
                     double excitation_probability = 0.5*k1 / (4*ratio_detuning_gamma * ratio_detuning_gamma + k1 + 1);
                                                         
-                    double rnd = (float)rand()/(float)(RAND_MAX);
+                    double rnd = RandomUniform_generate(part); //between 0 and 1
                     if ( rnd < excitation_probability )
                         {
                         LocalParticle_set_state(part, 2); // Excited particle
                         // photon recoil (from emitted photon!):
-                        double rnd = (float)rand()/(float)(RAND_MAX);
+                        double rnd = RandomUniform_generate(part); //between 0 and 1
                         
                         // If particle is excited, reduce its energy by, on average, the excitation energy with Lorentz boost
                         // 2.0*rnd ensures that the average energy lost is the excitation energy

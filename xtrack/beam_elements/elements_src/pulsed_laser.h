@@ -7,6 +7,8 @@
 #ifndef XTRACK_PulsedLaser_H
 #define XTRACK_PulsedLaser_H
 
+
+
 /*gpufun*/
 void PulsedLaser_track_local_particle(PulsedLaserData el, LocalParticle* part0){
 
@@ -50,7 +52,7 @@ void PulsedLaser_track_local_particle(PulsedLaserData el, LocalParticle* part0){
     
     // Maximum laser intensity (at the focal point)
     double I0 = sqrt(2/PI)*(laser_energy/laser_sigma_t)/(PI*w0*w0); // W/m^2
-    
+
     //start_per_particle_block (part0->part)
     
         double state = LocalParticle_get_state(part);
@@ -121,7 +123,10 @@ void PulsedLaser_track_local_particle(PulsedLaserData el, LocalParticle* part0){
                 // printf("high field case: OmegaRabiTau = %e\n", OmegaRabiTau);
                 // In case of a very high laser field:
                 LocalParticle_set_state(part, 2); // Excited particle
-                double rnd = (float)rand()/(float)(RAND_MAX);
+                
+                //double rnd = (float)rand()/(float)(RAND_MAX); //between 0 and 1
+                double rnd = RandomUniform_generate(part); //between 0 and 1
+                
                 LocalParticle_add_to_energy(part,-ion_excitation_energy*2.0*rnd*2.0*gamma, 0); // eV
             }
     
@@ -136,12 +141,17 @@ void PulsedLaser_track_local_particle(PulsedLaserData el, LocalParticle* part0){
             
             double excitation_probability = PulsedLaserData_get_Map_of_Excitation(el, idx);
                                         
-            double rnd = RandomUniform_generate(); //between 0 and 1
+            //double rnd = (float)rand()/(float)(RAND_MAX); //between 0 and 1
+            double rnd = RandomUniform_generate(part); //between 0 and 1
+            // printf("Generated number (excitation): %f\n", rnd);
+            // printf("excitation_probability %f\n", excitation_probability);
             if ( rnd < excitation_probability )
                 {
                 LocalParticle_set_state(part, 2); // Excited particle
                 // photon recoil (from emitted photon!):
-                double rnd = RandomUniform_generate(); //between 0 and 1
+                //double rnd = (float)rand()/(float)(RAND_MAX); //between 0 and 1
+                double rnd = RandomUniform_generate(part); //between 0 and 1
+                //printf("rr = %f\n", rr);
 
                 // If particle is excited, reduce its energy by, on average, the excitation energy with Lorentz boost
                 // 2.0*rnd ensures that the average energy lost is the excitation energy

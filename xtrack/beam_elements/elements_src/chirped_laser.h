@@ -126,7 +126,7 @@ void ChirpedLaser_track_local_particle(ChirpedLaserData el, LocalParticle* part0
                 // printf("high field case: OmegaRabiTau = %e\n", OmegaRabiTau);
                 // In case of a very high laser field:
                 LocalParticle_set_state(part, 2); // Excited particle
-                double rnd = (float)rand()/(float)(RAND_MAX);
+                double rnd = RandomUniform_generate(part); //between 0 and 1
                 LocalParticle_add_to_energy(part,-ion_excitation_energy*2.0*rnd*2.0*gamma, 0); // eV
             }
     
@@ -143,12 +143,12 @@ void ChirpedLaser_track_local_particle(ChirpedLaserData el, LocalParticle* part0
 
             //printf("excitation_probability = %e\n", excitation_probability);
                                         
-            double rnd = (float)rand()/(float)(RAND_MAX); //between 0 and 1
+            double rnd = RandomUniform_generate(part); //between 0 and 1
             if ( rnd < excitation_probability )
                 {
                 LocalParticle_set_state(part, 2); // Excited particle
                 // photon recoil (from emitted photon!):
-                double rnd = (float)rand()/(float)(RAND_MAX);
+                double rnd = RandomUniform_generate(part); //between 0 and 1
 
                 // If particle is excited, reduce its energy by, on average, the excitation energy with Lorentz boost
                 // 2.0*rnd ensures that the average energy lost is the excitation energy

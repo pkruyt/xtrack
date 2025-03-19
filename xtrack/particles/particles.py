@@ -212,6 +212,14 @@ class Particles(xo.HybridClass):
             raise NameError('`psigma` is not supported anymore.'
                             'Please use `pzeta` instead.')
 
+        accepted_args = set(self._xofields.keys()) | {
+            'energy0', 'tau', 'pzeta', 'mass_ratio', 'mass', 'kinetic_energy0',
+            '_context', '_buffer', '_offset', 'p0',
+        }
+        if set(kwargs.keys()) - accepted_args:
+            raise NameError(f'Invalid argument(s) provided: '
+                            f'{set(kwargs.keys()) - accepted_args}')
+
         per_part_input_vars = (
             self.per_particle_vars +
             ((xo.Float64, 'energy0'),
@@ -762,6 +770,8 @@ class Particles(xo.HybridClass):
         capacity = len(test_x)
         new_part_cpu = self.__class__(_capacity=capacity)
 
+        new_part_cpu.start_tracking_at_element = self.start_tracking_at_element
+
         # Copy scalar vars from first particle
         for tt, nn in self.scalar_vars:
             setattr(new_part_cpu, nn, getattr(self_cpu, nn))
@@ -777,7 +787,7 @@ class Particles(xo.HybridClass):
         # Copy to original context
         target_ctx = self._buffer.context
         if isinstance(target_ctx, xo.ContextCpu):
-            new_part_cpu._buffer.context = target_ctx
+            new_part_cpu.move(_context=target_ctx)
             return new_part_cpu
         else:
             return new_part_cpu.copy(_context=target_ctx)
@@ -876,16 +886,15 @@ class Particles(xo.HybridClass):
             # Reorganize particles
             with self._bypass_linked_vars():
                 for tt, nn in self.per_particle_vars:
+                    if nn.startswith('_rng'):
+                        continue
                     vv = getattr(self, nn)
                     vv_active = vv[mask_active]
                     vv_lost = vv[mask_lost]
 
                     vv[:n_active] = vv_active
                     vv[n_active:n_active + n_lost] = vv_lost
-                    if nn.startswith('_rng'):
-                        vv[n_active + n_lost:] = 0
-                    else:
-                        vv[n_active + n_lost:] = tt._dtype.type(LAST_INVALID_STATE)
+                    vv[n_active + n_lost:] = tt._dtype.type(LAST_INVALID_STATE)
 
         if isinstance(self._buffer.context, xo.ContextCpu):
             self._num_active_particles = n_active
@@ -988,6 +997,7 @@ class Particles(xo.HybridClass):
     def init_pipeline(self, name):
 
         self.name = name
+        self._needs_pipeline = True
 
     def show(self):
 
@@ -2173,7 +2183,7 @@ class Particles(xo.HybridClass):
                                     computed_value=_charge_ratio,
                                     mask=mask)
 
-    def update_p0c_and_energy_deviations(self, p0c):
+    def update_p0c_and_energy_deviations(self, p0c, update_pxpy=False):
 
         assert np.isscalar(p0c), 'p0c must be a scalar'
 
@@ -2192,6 +2202,13 @@ class Particles(xo.HybridClass):
         self._update_refs(p0c=new_p0c, mask=mask)
         self._update_energy_deviations(mask=mask, delta=new_delta)
         self._update_zeta(mask=mask, zeta=self.zeta * self.beta0 / old_beta0)
+
+        if update_pxpy:
+            if isinstance(self._context, xo.ContextPyopencl):
+                raise NotImplementedError # Issue wiht masking
+            scale_pxpy = old_p0c[mask] / new_p0c[mask]
+            self.px[mask] *= scale_pxpy
+            self.py[mask] *= scale_pxpy
 
 
 def _mask_to_where(mask, ctx):

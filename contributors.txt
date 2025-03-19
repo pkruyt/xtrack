@@ -2,8 +2,10 @@ The following people contributed to the development of this package:
 
 CERN contributors:
  - A. Abramov
+ - B. Abreu Figueiredo
  - H. Bartosik
  - X. Buffat
+ - S. Buijsman
  - R. De Maria
  - L. Deniau
  - C. Droin
@@ -12,6 +14,7 @@ CERN contributors:
  - A. Latina
  - B. Lindstrom
  - S. Lopaciuk
+ - J. Salvesen
  - G. Sterbini
  - F. Van Der Veken
 

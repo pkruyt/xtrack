@@ -2845,7 +2845,7 @@ class CWLaser(BeamElement):
                'cooling_section_length':  xo.Float64,
                }
     
-    _depends_on = [RandomUniform]
+    _depends_on = [RandomUniformAccurate]
     
     
     _extra_c_sources = [
@@ -2918,7 +2918,7 @@ class ChirpedLaser(BeamElement):
             'Detuning_star_max':      xo.Float64,
             }    
     
-    _depends_on = [RandomUniform]
+    _depends_on = [RandomUniformAccurate]
     
     _extra_c_sources = [
             _pkg_root.joinpath('headers/constants.h'),
@@ -3023,7 +3023,7 @@ class PulsedLaser(BeamElement):
                'DeltaDetuningTau_max':      xo.Float64,
               }
     
-    _depends_on = [RandomUniform]
+    _depends_on = [RandomUniformAccurate]
     
     _extra_c_sources = [
             _pkg_root.joinpath('headers/constants.h'),

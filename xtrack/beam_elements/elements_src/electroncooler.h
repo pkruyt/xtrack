@@ -9,6 +9,15 @@
 #define XTRACK_ELECTRONCOOLER_H
 
 /*gpufun*/
+double findMod(double a, double b)
+{
+    double mod = a - b * ((int)(a / b));
+    if ((mod < 0 && b > 0) || (mod > 0 && b < 0)) {
+        mod += b;
+    }
+    return mod;
+}
+
 void ElectronCooler_track_local_particle(ElectronCoolerData el, LocalParticle* part0){
 
     // Check if record flag is enabled
@@ -123,6 +132,13 @@ void ElectronCooler_track_local_particle(ElectronCoolerData el, LocalParticle* p
         LocalParticle_update_delta(part,delta_new);
         LocalParticle_add_to_px(part,Fx * gamma0 * tau/p0c);
         LocalParticle_add_to_py(part,Fy * gamma0 * tau/p0c);
+
+        // Davide coasting
+        double circumference = 78.54370266167771;
+        double half_circumference = circumference/2;
+        double const zeta  = LocalParticle_get_zeta(part);
+        double const zeta_hat  =  findMod(zeta + half_circumference, circumference) - half_circumference;
+        LocalParticle_set_zeta(part, zeta_hat);
 
         // Handles cases where force is record
         if (record_flag && record){

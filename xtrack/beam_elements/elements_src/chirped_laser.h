@@ -127,7 +127,7 @@ void ChirpedLaser_track_local_particle(ChirpedLaserData el, LocalParticle* part0
                 // In case of a very high laser field:
                 LocalParticle_set_state(part, 2); // Excited particle
                 double rnd = RandomUniform_generate(part); //between 0 and 1
-                LocalParticle_add_to_energy(part,-ion_excitation_energy*2.0*rnd*2.0*gamma, 0); // eV
+                LocalParticle_add_to_energy(part,-gamma*ion_excitation_energy*2.0*rnd, 0); // eV
             }
     
         else if (Detuning_star < Detuning_star_max &&
@@ -152,8 +152,8 @@ void ChirpedLaser_track_local_particle(ChirpedLaserData el, LocalParticle* part0
 
                 // If particle is excited, reduce its energy by, on average, the excitation energy with Lorentz boost
                 // 2.0*rnd ensures that the average energy lost is the excitation energy
-                // 2.0*gamma is the Lorentz boost
-                LocalParticle_add_to_energy(part,-ion_excitation_energy*2.0*rnd*2.0*gamma, 0); // eV
+                // gamma is the Lorentz boost
+                LocalParticle_add_to_energy(part,-gamma*ion_excitation_energy*2.0*rnd, 0); // eV
 
                 // //Also do transverse emission. This doesnt have a Lorentz boost
                 // double rnd_x = ((double)rand() / (RAND_MAX)) * 2.0 - 1.0;//between -1 and +1

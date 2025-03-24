@@ -117,8 +117,8 @@ void CWLaser_track_local_particle(CWLaserData el, LocalParticle* part0){
                         
                         // If particle is excited, reduce its energy by, on average, the excitation energy with Lorentz boost
                         // 2.0*rnd ensures that the average energy lost is the excitation energy
-                        // 2.0*gamma is the Lorentz boost
-                        LocalParticle_add_to_energy(part,-number_of_excitations*ion_excitation_energy*2.0*rnd*2.0*gamma, 0); // eV
+                        // gamma is the Lorentz boost
+                        LocalParticle_add_to_energy(part,-number_of_excitations*gamma*ion_excitation_energy*2.0*rnd, 0); // eV
                         }	
                     else
                         {
